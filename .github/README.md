@@ -6,3 +6,4 @@ Project Overview:
  ->Tests the model
  ->Uploads the trained model to Hugging Face
  ->Builds a Docker image for deployment
+

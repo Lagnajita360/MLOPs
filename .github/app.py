@@ -1,14 +1,39 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
-import joblib
+name: ML CI/CD Pipeline
 
-app = FastAPI()
-model = joblib.load("iris_model.pkl")
+on:
+  push:
+    branches: [ main ]
 
-class InputData(BaseModel):
-    data: list[float]
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-@app.post("/predict")
-def predict(input_data: InputData):
-    prediction = model.predict([input_data.data])
-    return {"prediction": prediction.tolist()}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.14
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Train Model
+      run: python train_model.py
+
+    - name: Test Model
+      run: python test_model.py
+    
+    - name: Upload Model to Hugging Face
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        python upload_to_hf.py
+
+    - name: Build Docker Image
+      run: docker build -t ml-app .
+
+    - name: Success Message
+      run: echo "Pipeline executed successfully"
